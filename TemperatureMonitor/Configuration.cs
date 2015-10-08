@@ -132,5 +132,16 @@ namespace TemperatureMonitor
         {
             get { return ConfigurationSettings.AppSettings["logDbCommand"]; }
         }
+
+        public static bool UsePerformanceCounter
+        {
+            get
+            {
+                bool usePerformanceCounter;
+                if (!bool.TryParse(ConfigurationSettings.AppSettings["usePerformanceCounter"], out usePerformanceCounter))
+                    usePerformanceCounter = false;  // По умолчанию нет
+                return usePerformanceCounter;
+            }
+        }
     }
 }

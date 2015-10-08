@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading;
 using System.Configuration;
+using System.Diagnostics;
 
 namespace TemperatureMonitor
 {
@@ -60,6 +61,40 @@ namespace TemperatureMonitor
                             break;
                     }
 
+                    // Performance counter initialization
+                    PerformanceCounter counter = null;
+                    try
+                    {
+                        if (Configuration.UsePerformanceCounter)
+                        {
+                            if (!PerformanceCounterCategory.Exists("Temperature of DS18B20 sensor"))
+                            {
+                                var counterDataCollection = new CounterCreationDataCollection();
+                                var counterData = new CounterCreationData
+                                {
+                                    CounterName = "Current temperature",
+                                    CounterHelp = "Current temperature of DS18B20 sensor",
+                                    CounterType = PerformanceCounterType.NumberOfItems64
+                                };
+                                counterDataCollection.Add(counterData);
+                                PerformanceCounterCategory.Create("Temperature of DS18B20 sensor",
+                                    "Temperature of DS18B20 sensor",
+                                    PerformanceCounterCategoryType.SingleInstance, counterDataCollection);
+                            }
+                            counter = new PerformanceCounter
+                            {
+                                CategoryName = "Temperature of DS18B20 sensor",
+                                CounterName = "Current temperature",
+                                MachineName = ".",
+                                ReadOnly = false
+                            };
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Не удалось инициализировать счетчик производительности");
+                    }
+
                     // Other initializations
                     var lastNotification = DateTime.Now.AddMinutes(0 - Configuration.AlertFrequency);
                     Temperatures = new Queue<Dictionary<string, object>>(11);
@@ -75,6 +110,8 @@ namespace TemperatureMonitor
                                     { "date", now },
                                     { "temperature", temperature }
                                 });
+                        if (counter != null)
+                            counter.RawValue = (long)temperature;
                         if (Temperatures.Count > 10)
                             Temperatures.Dequeue();
                         Console.WriteLine("{0}: {1}", now.ToString("dd.MM.yyyy hh:mm:ss"), temperature);
