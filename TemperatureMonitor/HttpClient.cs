@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -56,9 +55,9 @@ namespace TemperatureMonitor
             foreach (var temperature in Program.Temperatures)
             {
                 var row_class = "row";
-                if (((float) temperature[0]["temperature"]) >= Configuration.CriticalTemperatureForAlert)
+                if (((float) temperature["temperature"]) >= Configuration.CriticalTemperatureForAlert)
                     row_class = "row alert";
-                temperatureTable += string.Format(temperatureRow, temperature[0]["date"], temperature[0]["temperature"], row_class);
+                temperatureTable += string.Format(temperatureRow, temperature["date"], temperature["temperature"], row_class);
             }
             var style = ".time { padding-right: 10px; font-weight: bold; } .alert { color: red; }";
             var body = string.Format("<html><style>{1}</style><body>{0}</body></html>", temperatureTable, style);

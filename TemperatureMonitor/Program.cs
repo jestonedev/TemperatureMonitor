@@ -10,7 +10,7 @@ namespace TemperatureMonitor
     {
         private static SerialPort port = null;
 
-        public static Queue<List<Dictionary<string, object>>> Temperatures { get; set; }
+        public static Queue<Dictionary<string, object>> Temperatures { get; set; }
 
         static void Main(string[] args)
         {
@@ -18,6 +18,7 @@ namespace TemperatureMonitor
             {
                 try
                 {
+                    // Device initialization
                     var ss = new SearchSlaves();
                     ss.Search(com2);
                     DS18B20 ds18b20 = null;
@@ -36,8 +37,9 @@ namespace TemperatureMonitor
                         Console.WriteLine("Не удалось обнаружить датчик температуры DS18B20");
                         return;
                     }
-                    var lastNotification = DateTime.Now.AddMinutes(0 - Configuration.AlertFrequency);
+                    // SMTP initialization
                     var smtp = new System.Net.Mail.SmtpClient(Configuration.SmtpHost, Configuration.SmtpPort);
+                    // WebMonitor initialization
                     if (Configuration.HasWebMonitor)
                     {
                         var thread = new Thread(() =>
@@ -46,29 +48,53 @@ namespace TemperatureMonitor
                         });
                         thread.Start();
                     }
-                    Temperatures = new Queue<List<Dictionary<string, object>>>(11);
+                    // Log initialization
+                    var logger = new Logger();
+                    switch (Configuration.Log.ToLower())
+                    {
+                        case "file":
+                            logger = new FileLogger();
+                            break;
+                        case "database":
+                            logger = new DbLogger();
+                            break;
+                    }
+
+                    // Other initializations
+                    var lastNotification = DateTime.Now.AddMinutes(0 - Configuration.AlertFrequency);
+                    Temperatures = new Queue<Dictionary<string, object>>(11);
+                    
+                    // Reading temperature
                     while (true)
                     {
                         var temperature = (float) Math.Round(ds18b20.ReadTemperature(), 2);
-                        Temperatures.Enqueue(
-                            new List<Dictionary<string, object>>()
-                            {
+                        var now = DateTime.Now;
+                        Temperatures.Enqueue(                           
                                 new Dictionary<string, object>()
                                 {
-                                    { "date", DateTime.Now },
+                                    { "date", now },
                                     { "temperature", temperature }
-                                }
-                            });
+                                });
                         if (Temperatures.Count > 10)
                             Temperatures.Dequeue();
-                        Console.WriteLine(temperature);
+                        Console.WriteLine("{0}: {1}", now.ToString("dd.MM.yyyy hh:mm:ss"), temperature);
+                        // Write log
+                        logger.Write(now, temperature);
+                        // Send email notification
                         if (temperature >= Configuration.CriticalTemperatureForAlert &&
-                            lastNotification <= DateTime.Now.AddMinutes(0 - Configuration.AlertFrequency))
+                            lastNotification <= now.AddMinutes(0 - Configuration.AlertFrequency))
                         {
-                            lastNotification = DateTime.Now;
-                            foreach (var email in Configuration.EmailsForAlert)
-                                smtp.Send(Configuration.SmtpFrom, email, Configuration.SmtpSubject,
-                                    string.Format(Configuration.SmtpBody, temperature));
+                            lastNotification = now;
+                            try
+                            {
+                                foreach (var email in Configuration.EmailsForAlert)
+                                    smtp.Send(Configuration.SmtpFrom, email, Configuration.SmtpSubject,
+                                        string.Format(Configuration.SmtpBody, temperature));
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
                         }
                         Thread.Sleep(Configuration.TemperatureReadTimeout*1000 - 750);
                     }

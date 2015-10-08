@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TemperatureMonitor</RootNamespace>
     <AssemblyName>TemperatureMonitor</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -42,10 +42,13 @@
     <Compile Include="Command.cs" />
     <Compile Include="COMPort.cs" />
     <Compile Include="Configuration.cs" />
+    <Compile Include="DbLogger.cs" />
     <Compile Include="DS18B20.cs" />
+    <Compile Include="FileLogger.cs" />
     <Compile Include="HttpClient.cs" />
     <Compile Include="HttpServer.cs" />
     <Compile Include="IPort.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SearchSlaves.cs" />

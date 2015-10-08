@@ -107,5 +107,30 @@ namespace TemperatureMonitor
                 return webMonitorPort;
             }
         }
+
+        public static string Log
+        {
+            get { return ConfigurationSettings.AppSettings["log"]; }
+        }
+
+        public static string LogFileName
+        {
+            get { return ConfigurationSettings.AppSettings["logFileName"]; }
+        }
+
+        public static string LogDbProvider
+        {
+            get { return ConfigurationSettings.AppSettings["logDbProvider"]; }
+        }
+
+        public static string LogDbConnectionString
+        {
+            get { return ConfigurationSettings.AppSettings["logDbConnectionString"]; }
+        }
+
+        public static string LogDbCommand
+        {
+            get { return ConfigurationSettings.AppSettings["logDbCommand"]; }
+        }
     }
 }
